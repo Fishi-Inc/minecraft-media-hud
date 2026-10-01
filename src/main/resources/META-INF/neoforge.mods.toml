@@ -8,7 +8,7 @@ version = "${version}"
 displayName = "Media HUD"
 authors = "Fishi_Inc"
 description = '''
-Zeigt oben links den aktuell abgespielten Song (Windows-Medienwiedergabe, z. B. Spotify).
+Displays the media that is currently playing (or paused) in the top corner of your screen.
 '''
 
 [[dependencies.mediahud]]
