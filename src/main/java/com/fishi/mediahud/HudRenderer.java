@@ -47,8 +47,6 @@ final class HudRenderer {
 	private static final int COLOR_BAR_BACKGROUND = 0xFF404040;
 	private static final int COLOR_BAR = 0xFFFFFFFF;
 
-	/** Nach so langer Pause wird die Karte ausgeblendet. */
-	private static final long PAUSE_FADE_DELAY_MS = 30_000;
 	private static final long FADE_DURATION_MS = 1_000;
 	/** Darunter wird gar nicht mehr gezeichnet (Schrift mit fast 0 Alpha würde sonst deckend). */
 	private static final float MIN_ALPHA = 0.05f;
@@ -140,7 +138,7 @@ final class HudRenderer {
 	}
 
 	/**
-	 * 1 = voll sichtbar. Ist der Titel länger als {@link #PAUSE_FADE_DELAY_MS} pausiert,
+	 * 1 = voll sichtbar. Ist der Titel länger als das Pausen-Timeout aus der Config pausiert,
 	 * wird die Karte innerhalb von {@link #FADE_DURATION_MS} ausgeblendet.
 	 */
 	private static float fadeAlpha(MediaWatcher.Track track, long now) {
@@ -149,7 +147,11 @@ final class HudRenderer {
 			activeKey = key;
 			lastActiveMs = now;
 		}
-		long fadingFor = now - lastActiveMs - PAUSE_FADE_DELAY_MS;
+		int timeoutSeconds = MediaHudConfig.pauseTimeoutSeconds();
+		if (timeoutSeconds <= 0) {
+			return 1f; // 0 = kein Timeout
+		}
+		long fadingFor = now - lastActiveMs - timeoutSeconds * 1000L;
 		if (fadingFor <= 0) {
 			return 1f;
 		}

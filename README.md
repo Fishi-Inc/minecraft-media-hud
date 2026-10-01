@@ -27,7 +27,7 @@ den aktuellen Titel samt Cover und Position aus.
 
 - Angezeigt wird nur etwas, wenn der Status **Playing** oder **Paused** ist.
 - Bei F1 (HUD ausgeblendet) und F3 (Debug-Anzeige) wird nichts angezeigt.
-- Ist die Wiedergabe länger als 30 Sekunden pausiert, wird die Anzeige ausgeblendet.
+- Ist die Wiedergabe länger als das Pausen-Timeout (Standard 30 Sekunden) pausiert, wird die Anzeige ausgeblendet.
 - Kommt 5 Sekunden lang keine Antwort, verschwindet die Anzeige.
 - Beendet sich PowerShell, wird es nach 10 Sekunden neu gestartet.
 - Endet Minecraft (auch bei einem Absturz), beendet sich das Skript selbst.
@@ -40,6 +40,7 @@ Im Spiel unter **Mods → Media HUD → Konfiguration** (oder `config/mediahud-c
   rechts aus, wenn Xaero's Minimap installiert ist (deren Standardplatz ist oben links).
   JourneyMap sitzt standardmäßig oben rechts, dort bleibt die Anzeige links.
 - **Größe:** 1 = klein, 2 = mittel (Standard), 3 = groß, zusätzlich zur GUI-Skalierung von Minecraft
+- **Pausen-Timeout:** Sekunden bis zum Ausblenden bei Pause, 0 = nie, höchstens 300 (Standard 30)
 - **Abstand horizontal / vertikal:** z. B. den vertikalen Abstand erhöhen, damit die Anzeige unter einer Minimap liegt
 
 ## Bauen

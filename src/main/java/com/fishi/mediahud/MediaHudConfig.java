@@ -15,6 +15,7 @@ public final class MediaHudConfig {
 	public static final ModConfigSpec SPEC;
 	public static final ModConfigSpec.EnumValue<Corner> CORNER;
 	public static final ModConfigSpec.IntValue SIZE;
+	public static final ModConfigSpec.IntValue PAUSE_TIMEOUT;
 	public static final ModConfigSpec.IntValue OFFSET_X;
 	public static final ModConfigSpec.IntValue OFFSET_Y;
 
@@ -26,6 +27,9 @@ public final class MediaHudConfig {
 		SIZE = builder
 			.comment("Größe der Anzeige, zusätzlich zur GUI-Skalierung: 1 = klein, 2 = mittel, 3 = groß")
 			.defineInRange("size", 2, 1, 3);
+		PAUSE_TIMEOUT = builder
+			.comment("Sekunden, nach denen die Anzeige bei pausierter Wiedergabe ausgeblendet wird (0 = nie, max. 300)")
+			.defineInRange("pauseTimeout", 30, 0, 300);
 		OFFSET_X = builder
 			.comment("Horizontaler Abstand zum Bildschirmrand (GUI-Pixel)")
 			.defineInRange("offsetX", 4, 0, 2000);
@@ -88,6 +92,14 @@ public final class MediaHudConfig {
 			case 3 -> 1f;
 			default -> 2f / 3f;
 		};
+	}
+
+	static int pauseTimeoutSeconds() {
+		try {
+			return PAUSE_TIMEOUT.get();
+		} catch (RuntimeException e) {
+			return 30;
+		}
 	}
 
 	static int offsetX() {
