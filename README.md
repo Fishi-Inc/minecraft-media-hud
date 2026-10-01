@@ -35,7 +35,9 @@ den aktuellen Titel samt Cover und Position aus.
 
 Im Spiel unter **Mods → Media HUD → Konfiguration** (oder `config/mediahud-client.toml`):
 
-- **Ecke:** oben links (Standard) oder oben rechts
+- **Ecke:** `AUTO` (Standard), oben links oder oben rechts. Bei `AUTO` weicht die Anzeige nach
+  rechts aus, wenn Xaero's Minimap installiert ist (deren Standardplatz ist oben links).
+  JourneyMap sitzt standardmäßig oben rechts, dort bleibt die Anzeige links.
 - **Abstand horizontal / vertikal:** z. B. den vertikalen Abstand erhöhen, damit die Anzeige unter einer Minimap liegt
 
 ## Bauen

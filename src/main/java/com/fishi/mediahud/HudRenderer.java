@@ -29,8 +29,8 @@ final class HudRenderer {
 	private static final int HEIGHT = 44;
 	private static final int ACCENT_WIDTH = 2;
 	private static final int COVER_SIZE = 32;
-	/** Das Skript liefert Cover immer als 64x64-PNG. */
-	private static final int COVER_TEXTURE_SIZE = 64;
+	/** Das Skript liefert Cover immer als 128x128-PNG (scharf bis GUI-Skalierung 4). */
+	private static final int COVER_TEXTURE_SIZE = 128;
 	private static final int ICON_SIZE = 7;
 	private static final int BAR_HEIGHT = 2;
 
