@@ -26,6 +26,13 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      - name: Lint PowerShell script
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/src/main/resources/assets/mediahud/media.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors) { $errors | Out-String | Write-Host; exit 1 }
+
       - name: Build
         run: ./gradlew build
 

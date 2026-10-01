@@ -3,9 +3,8 @@
 NeoForge-Mod für **Minecraft 1.21.1**. Sie zeigt oben links den Song an, der gerade
 unter Windows läuft, z. B. in Spotify, im Browser oder in einem anderen Player.
 
-```
-Künstler - Titel
-```
+Angezeigt werden Cover, Titel, Künstler, Zeit, Fortschrittsbalken und Play/Pause-Status.
+Zu lange Titel laufen als Laufschrift durch.
 
 ## Voraussetzungen
 
@@ -24,13 +23,20 @@ Windows stellt die laufende Wiedergabe über die Schnittstelle
 bei der Medienanzeige in der Lautstärke-Einblendung. Java kann diese WinRT-API nicht
 direkt aufrufen. Deshalb startet die Mod einen einzigen unsichtbaren PowerShell-Prozess
 (`src/main/resources/assets/mediahud/media.ps1`). Dieser gibt einmal pro Sekunde
-„Künstler / Titel“ aus.
+den aktuellen Titel samt Cover und Position aus.
 
-- Angezeigt wird nur etwas, wenn der Status **Playing** ist.
-- Bei F1 (HUD ausgeblendet) wird nichts angezeigt.
+- Angezeigt wird nur etwas, wenn der Status **Playing** oder **Paused** ist.
+- Bei F1 (HUD ausgeblendet) und F3 (Debug-Anzeige) wird nichts angezeigt.
 - Kommt 5 Sekunden lang keine Antwort, verschwindet die Anzeige.
 - Beendet sich PowerShell, wird es nach 10 Sekunden neu gestartet.
 - Endet Minecraft (auch bei einem Absturz), beendet sich das Skript selbst.
+
+## Einstellungen
+
+Im Spiel unter **Mods → Media HUD → Konfiguration** (oder `config/mediahud-client.toml`):
+
+- **Ecke:** oben links (Standard) oder oben rechts
+- **Abstand horizontal / vertikal:** z. B. den vertikalen Abstand erhöhen, damit die Anzeige unter einer Minimap liegt
 
 ## Bauen
 

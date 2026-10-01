@@ -18,7 +18,7 @@ import java.util.Locale;
  *
  * Java kommt an diese WinRT-API nicht direkt heran. Deshalb wird ein einziger
  * PowerShell-Prozess im Hintergrund gestartet (Skript: media.ps1), der einmal pro
- * Sekunde eine Zeile "Künstler<TAB>Titel" ausgibt. Läuft nichts, kommt eine leere Zeile.
+ * Sekunde den Wiedergabe-Zustand ausgibt (Format siehe Skript).
  *
  * Alles hier ist bewusst defensiv: Jeder Fehler führt nur dazu, dass nichts
  * angezeigt wird. Das Spiel wird nie beeinträchtigt.
@@ -35,11 +35,32 @@ public final class MediaWatcher {
 	/** PowerShell-Skript (Windows PowerShell 5.1, auf Windows 10/11 immer vorhanden). */
 	private static final String SCRIPT_RESOURCE = "/assets/mediahud/media.ps1";
 
-	/** Unveränderlicher Zustand, damit Render-Thread und Lese-Thread nie halbe Daten sehen. */
-	private record Snapshot(String text, long receivedAtMs) {
+	/** Maximale Größe eines Covers (Base64), alles darüber wird ignoriert. */
+	private static final int MAX_COVER_BASE64_LENGTH = 1_000_000;
+
+	/**
+	 * Aktueller Titel. Unveränderlich, damit Render-Thread und Lese-Thread nie halbe Daten sehen.
+	 *
+	 * @param coverId 0 = kein Cover vorhanden
+	 */
+	public record Track(String title, String artist, boolean playing, long positionMs, long durationMs,
+			int coverId, long receivedAtMs) {
+		/** Position zum Zeitpunkt {@code nowMs}; beim Abspielen seit der letzten Meldung hochgerechnet. */
+		public long positionAt(long nowMs) {
+			long position = positionMs;
+			if (playing) {
+				position += Math.max(0, nowMs - receivedAtMs);
+			}
+			return Math.max(0, Math.min(position, durationMs));
+		}
 	}
 
-	private static volatile Snapshot snapshot = new Snapshot(null, 0);
+	/** Cover als PNG-Daten. */
+	public record Cover(int id, byte[] png) {
+	}
+
+	private static volatile Track track = null;
+	private static volatile Cover cover = null;
 	private static volatile boolean running = false;
 	private static volatile Process process = null;
 	private static Thread thread = null;
@@ -72,18 +93,20 @@ public final class MediaWatcher {
 	}
 
 	/**
-	 * Gibt den anzuzeigenden Text zurück oder {@code null}, wenn nichts angezeigt werden soll.
+	 * Gibt den aktuellen Titel zurück oder {@code null}, wenn nichts angezeigt werden soll.
 	 * Wird jeden Frame vom Render-Thread aufgerufen und ist daher sehr billig.
 	 */
-	public static String getCurrentText() {
-		Snapshot s = snapshot;
-		if (s.text() == null) {
+	public static Track getTrack() {
+		Track t = track;
+		if (t == null || System.currentTimeMillis() - t.receivedAtMs() > STALE_AFTER_MS) {
 			return null;
 		}
-		if (System.currentTimeMillis() - s.receivedAtMs() > STALE_AFTER_MS) {
-			return null;
-		}
-		return s.text();
+		return t;
+	}
+
+	/** Zuletzt empfangenes Cover oder {@code null}. */
+	public static Cover getCover() {
+		return cover;
 	}
 
 	private static void runLoop() {
@@ -98,7 +121,8 @@ public final class MediaWatcher {
 				}
 			} finally {
 				destroyProcess();
-				snapshot = new Snapshot(null, 0);
+				track = null;
+				cover = null;
 			}
 
 			if (!running) {
@@ -130,7 +154,7 @@ public final class MediaWatcher {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
 			String line;
 			while (running && (line = reader.readLine()) != null) {
-				snapshot = new Snapshot(parseLine(line), System.currentTimeMillis());
+				handleLine(line, System.currentTimeMillis());
 			}
 		}
 	}
@@ -156,28 +180,61 @@ public final class MediaWatcher {
 		}
 	}
 
-	/** "Künstler<TAB>Titel" -> "Künstler - Titel". Ohne Titel wird nichts angezeigt. */
-	static String parseLine(String line) {
-		if (line == null) {
+	static void handleLine(String line, long nowMs) {
+		String[] parts = line.split("\t", -1);
+		if (parts.length == 3 && parts[0].equals("A")) {
+			Cover c = parseCover(parts);
+			if (c != null) {
+				cover = c;
+			}
+			return;
+		}
+		// Jede andere Zeile (auch eine leere) ist eine Statusmeldung.
+		track = parseTrack(parts, nowMs);
+	}
+
+	/** {@code S <Status> <Künstler> <Titel> <PositionMs> <DauerMs> <CoverId>}; sonst {@code null}. */
+	static Track parseTrack(String[] parts, long nowMs) {
+		if (parts.length != 7 || !clean(parts[0]).equals("S")) {
 			return null;
 		}
-		String artist = "";
-		String title;
-		int tab = line.indexOf('\t');
-		if (tab >= 0) {
-			artist = clean(line.substring(0, tab));
-			title = clean(line.substring(tab + 1));
-		} else {
-			title = clean(line);
+		String status = clean(parts[1]);
+		if (!status.equals("Playing") && !status.equals("Paused")) {
+			return null;
 		}
+		String title = limit(clean(parts[3]));
 		if (title.isEmpty()) {
 			return null;
 		}
-		String text = artist.isEmpty() ? title : artist + " - " + title;
-		if (text.length() > MAX_TEXT_LENGTH) {
-			text = text.substring(0, MAX_TEXT_LENGTH - 3) + "...";
+		try {
+			long duration = Math.max(0, Long.parseLong(parts[5].trim()));
+			long position = Math.max(0, Math.min(Long.parseLong(parts[4].trim()), duration));
+			int coverId = Integer.parseInt(parts[6].trim());
+			return new Track(title, limit(clean(parts[2])), status.equals("Playing"), position, duration, coverId, nowMs);
+		} catch (NumberFormatException e) {
+			return null;
 		}
-		return text;
+	}
+
+	/** {@code A <CoverId> <PNG als Base64>}; sonst {@code null}. */
+	static Cover parseCover(String[] parts) {
+		String data = parts[2].trim();
+		if (data.isEmpty() || data.length() > MAX_COVER_BASE64_LENGTH) {
+			return null;
+		}
+		try {
+			int id = Integer.parseInt(parts[1].trim());
+			if (id <= 0) {
+				return null;
+			}
+			return new Cover(id, Base64.getDecoder().decode(data));
+		} catch (IllegalArgumentException e) {
+			return null;
+		}
+	}
+
+	private static String limit(String s) {
+		return s.length() > MAX_TEXT_LENGTH ? s.substring(0, MAX_TEXT_LENGTH - 3) + "..." : s;
 	}
 
 	/** Entfernt BOM und Steuerzeichen, damit nur normaler Text gerendert wird. */
@@ -185,7 +242,7 @@ public final class MediaWatcher {
 		StringBuilder sb = new StringBuilder(s.length());
 		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
-			if (c == '﻿' || Character.isISOControl(c)) {
+			if (c == '\uFEFF' || Character.isISOControl(c)) {
 				continue;
 			}
 			sb.append(c);

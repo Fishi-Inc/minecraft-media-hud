@@ -1,28 +1,27 @@
 package com.fishi.mediahud;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Mod(value = "mediahud", dist = Dist.CLIENT)
 public final class MediaHudClient {
-	private static final int X = 4;
-	private static final int Y = 4;
-	private static final int COLOR = 0xFFFFFFFF;
-	/** Maximale Breite der Anzeige in GUI-Pixeln (entspricht etwa 50 Zeichen). */
-	private static final int MAX_WIDTH = 250;
-	/** Abstand zwischen Ende und erneutem Anfang der Laufschrift. */
-	private static final int MARQUEE_GAP = 30;
-	/** Geschwindigkeit der Laufschrift in GUI-Pixeln pro Sekunde. */
-	private static final int MARQUEE_SPEED = 30;
+	private static final Logger LOGGER = LoggerFactory.getLogger("mediahud");
+	private static boolean loggedRenderFailure = false;
 
-	public MediaHudClient(IEventBus modEventBus) {
+	public MediaHudClient(IEventBus modEventBus, ModContainer container) {
+		container.registerConfig(ModConfig.Type.CLIENT, MediaHudConfig.SPEC);
+		container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
 		modEventBus.addListener(MediaHudClient::onClientSetup);
 		NeoForge.EVENT_BUS.addListener(MediaHudClient::onRenderGui);
 		// Reine Java-Absicherung: beim Beenden der JVM den Hintergrundprozess stoppen.
@@ -38,37 +37,22 @@ public final class MediaHudClient {
 		if (minecraft == null || minecraft.options == null || minecraft.font == null) {
 			return;
 		}
-		if (minecraft.options.hideGui) {
+		// F1 (HUD aus) oder F3 (Debug-Anzeige liegt ebenfalls oben links)
+		if (minecraft.options.hideGui || minecraft.getDebugOverlay().showDebugScreen()) {
 			return;
 		}
-		String text = MediaWatcher.getCurrentText();
-		if (text == null) {
+		MediaWatcher.Track track = MediaWatcher.getTrack();
+		if (track == null) {
 			return;
 		}
-		drawText(event.getGuiGraphics(), minecraft.font, text);
-	}
-
-	/** Passt der Text in die Box, wird er normal gezeichnet, sonst als Laufschrift. */
-	private static void drawText(GuiGraphics graphics, Font font, String text) {
-		int boxWidth = Math.min(MAX_WIDTH, graphics.guiWidth() - 2 * X);
-		if (boxWidth <= 0) {
-			return;
-		}
-		int textWidth = font.width(text);
-		if (textWidth <= boxWidth) {
-			graphics.drawString(font, text, X, Y, COLOR);
-			return;
-		}
-
-		int cycle = textWidth + MARQUEE_GAP;
-		int offset = (int) ((System.currentTimeMillis() * MARQUEE_SPEED / 1000) % cycle);
-		// Alles außerhalb der Box wird abgeschnitten (+1 für den Schatten).
-		graphics.enableScissor(X, Y, X + boxWidth, Y + font.lineHeight + 1);
 		try {
-			graphics.drawString(font, text, X - offset, Y, COLOR);
-			graphics.drawString(font, text, X - offset + cycle, Y, COLOR);
-		} finally {
-			graphics.disableScissor();
+			HudRenderer.render(event.getGuiGraphics(), minecraft, track);
+		} catch (RuntimeException e) {
+			// Ein Fehler in der Anzeige darf nie das Spiel abstürzen lassen.
+			if (!loggedRenderFailure) {
+				LOGGER.warn("Media HUD: Anzeige fehlgeschlagen.", e);
+				loggedRenderFailure = true;
+			}
 		}
 	}
 }

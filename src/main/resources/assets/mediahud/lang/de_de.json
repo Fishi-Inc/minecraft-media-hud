@@ -1,0 +1,11 @@
+{
+  "mediahud.configuration.title": "Media HUD",
+  "mediahud.configuration.section.mediahud.client.toml": "Media HUD",
+  "mediahud.configuration.section.mediahud.client.toml.title": "Media HUD",
+  "mediahud.configuration.corner": "Ecke",
+  "mediahud.configuration.corner.tooltip": "Bildschirmecke der Anzeige",
+  "mediahud.configuration.offsetX": "Abstand horizontal",
+  "mediahud.configuration.offsetX.tooltip": "Abstand zum Bildschirmrand (GUI-Pixel)",
+  "mediahud.configuration.offsetY": "Abstand vertikal",
+  "mediahud.configuration.offsetY.tooltip": "Abstand zum Bildschirmrand (GUI-Pixel). Erhöhen, um unter eine Minimap zu rutschen."
+}
