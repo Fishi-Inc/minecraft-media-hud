@@ -27,25 +27,31 @@ $managerType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionM
 $propsType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties, Windows.Media.Control, ContentType=WindowsRuntime]
 $streamType = [Windows.Storage.Streams.IRandomAccessStreamWithContentType, Windows.Storage.Streams, ContentType=WindowsRuntime]
 
-# Laedt das Cover, skaliert es auf 128x128 und gibt es als PNG (Base64) zurueck. Bei Fehlern ''.
-function Get-Cover($props) {
-    $stream = $null; $image = $null; $bitmap = $null; $graphics = $null; $memory = $null
+# Laedt das Cover (IRandomAccessStreamReference), skaliert es auf 128x128 und gibt es
+# als PNG (Base64) zurueck. Bei Fehlern ''.
+function Get-Cover($thumbnail) {
+    $winStream = $null; $stream = $null; $buffer = $null; $image = $null; $bitmap = $null; $graphics = $null; $png = $null
     try {
-        if ($null -eq $props.Thumbnail) { return '' }
-        $winStream = Await ($props.Thumbnail.OpenReadAsync()) $streamType
+        if ($null -eq $thumbnail) { return '' }
+        $winStream = Await ($thumbnail.OpenReadAsync()) $streamType
         $stream = [System.IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($winStream)
-        $image = [System.Drawing.Image]::FromStream($stream)
+        # Erst komplett in den Speicher kopieren: Image.FromStream braucht einen durchsuchbaren Stream.
+        $buffer = New-Object System.IO.MemoryStream
+        $stream.CopyTo($buffer)
+        if ($buffer.Length -eq 0) { return '' }
+        $buffer.Position = 0
+        $image = [System.Drawing.Image]::FromStream($buffer)
         $bitmap = New-Object System.Drawing.Bitmap 128, 128
         $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
         $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
         $graphics.DrawImage($image, 0, 0, 128, 128)
-        $memory = New-Object System.IO.MemoryStream
-        $bitmap.Save($memory, [System.Drawing.Imaging.ImageFormat]::Png)
-        return [Convert]::ToBase64String($memory.ToArray())
+        $png = New-Object System.IO.MemoryStream
+        $bitmap.Save($png, [System.Drawing.Imaging.ImageFormat]::Png)
+        return [Convert]::ToBase64String($png.ToArray())
     } catch {
         return ''
     } finally {
-        foreach ($d in @($graphics, $bitmap, $image, $stream, $memory)) {
+        foreach ($d in @($graphics, $bitmap, $image, $buffer, $stream, $png, $winStream)) {
             if ($null -ne $d) { try { $d.Dispose() } catch { } }
         }
     }
@@ -60,6 +66,7 @@ function Send($line) {
     }
 }
 
+# --- Hauptschleife ---
 $manager = Await ($managerType::RequestAsync()) $managerType
 
 $lastKey = $null
@@ -102,10 +109,10 @@ while ($true) {
                     $ticksSinceChange++
                 }
                 # Erst ab dem zweiten Durchlauf laden: manche Apps liefern direkt nach dem
-                # Titelwechsel noch kurz das alte Cover. Hoechstens 5 Versuche pro Titel.
-                if (-not $coverLoaded -and $ticksSinceChange -ge 1 -and $coverTries -lt 5) {
+                # Titelwechsel noch kurz das alte Cover. Hoechstens 10 Versuche pro Titel.
+                if (-not $coverLoaded -and $ticksSinceChange -ge 1 -and $coverTries -lt 10) {
                     $coverTries++
-                    $cover = Get-Cover $props
+                    $cover = Get-Cover $props.Thumbnail
                     if ($cover -ne '') {
                         $coverLoaded = $true
                         Send ("A`t" + $coverId + "`t" + $cover)
