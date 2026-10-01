@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "mediahud"
+version = "${version}"
+displayName = "Media HUD"
+authors = "Fishi Inc"
+description = '''
+Zeigt oben links den aktuell abgespielten Song (Windows-Medienwiedergabe, z. B. Spotify).
+'''
+
+[[dependencies.mediahud]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1.0,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.mediahud]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.21.2)"
+ordering = "NONE"
+side = "CLIENT"

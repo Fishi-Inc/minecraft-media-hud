@@ -1,6 +1,6 @@
 # Media HUD
 
-Fabric-Mod für **Minecraft 1.21.1**. Sie zeigt oben links den Song an, der gerade
+NeoForge-Mod für **Minecraft 1.21.1**. Sie zeigt oben links den Song an, der gerade
 unter Windows läuft, z. B. in Spotify, im Browser oder in einem anderen Player.
 
 ```
@@ -10,12 +10,12 @@ Künstler - Titel
 ## Voraussetzungen
 
 - Windows 10 oder 11. Auf anderen Systemen macht die Mod nichts.
-- [Fabric Loader](https://fabricmc.net/use/) und [Fabric API](https://modrinth.com/mod/fabric-api) für 1.21.1.
+- [NeoForge](https://neoforged.net/) 21.1.x für Minecraft 1.21.1. Die Mod läuft nur auf dem Client.
 
 ## Installation
 
 1. Die `.jar` aus `build/libs/` (oder aus dem Artefakt „media-hud“ der GitHub Action) in den `mods`-Ordner legen.
-2. Minecraft mit dem Fabric-Profil starten.
+2. Minecraft mit dem NeoForge-Profil starten.
 
 ## Funktionsweise
 

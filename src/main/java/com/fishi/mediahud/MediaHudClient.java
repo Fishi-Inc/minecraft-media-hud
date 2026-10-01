@@ -1,36 +1,42 @@
 package com.fishi.mediahud;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.Minecraft;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.common.NeoForge;
 
-public final class MediaHudClient implements ClientModInitializer {
+@Mod(value = "mediahud", dist = Dist.CLIENT)
+public final class MediaHudClient {
 	private static final int X = 4;
 	private static final int Y = 4;
 	private static final int COLOR = 0xFFFFFFFF;
 
-	@Override
-	public void onInitializeClient() {
-		HudRenderCallback.EVENT.register(MediaHudClient::render);
-		ClientLifecycleEvents.CLIENT_STARTED.register(client -> MediaWatcher.start());
-		ClientLifecycleEvents.CLIENT_STOPPING.register(client -> MediaWatcher.stop());
+	public MediaHudClient(IEventBus modEventBus) {
+		modEventBus.addListener(MediaHudClient::onClientSetup);
+		NeoForge.EVENT_BUS.addListener(MediaHudClient::onRenderGui);
+		// Reine Java-Absicherung: beim Beenden der JVM den Hintergrundprozess stoppen.
+		Runtime.getRuntime().addShutdownHook(new Thread(MediaWatcher::stop, "MediaHUD-Shutdown"));
 	}
 
-	private static void render(DrawContext context, RenderTickCounter tickCounter) {
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client == null || client.options == null || client.textRenderer == null) {
+	private static void onClientSetup(FMLClientSetupEvent event) {
+		MediaWatcher.start();
+	}
+
+	private static void onRenderGui(RenderGuiEvent.Post event) {
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft == null || minecraft.options == null || minecraft.font == null) {
 			return;
 		}
-		if (client.options.hudHidden) {
+		if (minecraft.options.hideGui) {
 			return;
 		}
 		String text = MediaWatcher.getCurrentText();
 		if (text == null) {
 			return;
 		}
-		context.drawTextWithShadow(client.textRenderer, text, X, Y, COLOR);
+		event.getGuiGraphics().drawString(minecraft.font, text, X, Y, COLOR);
 	}
 }
