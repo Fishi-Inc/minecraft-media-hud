@@ -2,6 +2,7 @@
 
 - **Öffentliches Repo:** Keine persönlichen Daten (Namen, E-Mails, Pfade, Benutzernamen o. Ä.)
   in Code, Commits, Issues, PRs oder Releases. So anonym wie möglich bleiben.
+  Einzige Ausnahme: Owner/Creator der Mod wird als „Fishi_Inc“ angegeben.
 - **Einfach und defensiv:** Keine unnötigen Features. Nur APIs nutzen, deren Verhalten sicher
   bekannt ist. Fehler dürfen nie das Spiel beeinträchtigen.
 - **Versionierung:** `mod_version` in `gradle.properties`. Jeder in `main` gemergte Pull Request
