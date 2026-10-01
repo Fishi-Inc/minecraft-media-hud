@@ -14,6 +14,7 @@ public final class MediaHudConfig {
 
 	public static final ModConfigSpec SPEC;
 	public static final ModConfigSpec.EnumValue<Corner> CORNER;
+	public static final ModConfigSpec.IntValue SIZE;
 	public static final ModConfigSpec.IntValue OFFSET_X;
 	public static final ModConfigSpec.IntValue OFFSET_Y;
 
@@ -22,6 +23,9 @@ public final class MediaHudConfig {
 		CORNER = builder
 			.comment("Bildschirmecke der Anzeige. AUTO: oben rechts, wenn Xaero's Minimap installiert ist, sonst oben links")
 			.defineEnum("corner", Corner.AUTO);
+		SIZE = builder
+			.comment("Größe der Anzeige, zusätzlich zur GUI-Skalierung: 1 = klein, 2 = mittel, 3 = groß")
+			.defineInRange("size", 2, 1, 3);
 		OFFSET_X = builder
 			.comment("Horizontaler Abstand zum Bildschirmrand (GUI-Pixel)")
 			.defineInRange("offsetX", 4, 0, 2000);
@@ -69,6 +73,21 @@ public final class MediaHudConfig {
 			autoCorner = xaero && !journeyMap ? Corner.TOP_RIGHT : Corner.TOP_LEFT;
 		}
 		return autoCorner;
+	}
+
+	/** Skalierungsfaktor der Karte je Größenstufe. */
+	static float scale() {
+		int size;
+		try {
+			size = SIZE.get();
+		} catch (RuntimeException e) {
+			size = 2;
+		}
+		return switch (size) {
+			case 1 -> 0.5f;
+			case 3 -> 1f;
+			default -> 2f / 3f;
+		};
 	}
 
 	static int offsetX() {

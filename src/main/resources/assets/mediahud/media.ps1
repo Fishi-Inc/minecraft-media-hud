@@ -26,6 +26,10 @@ function Clean($s) {
 $managerType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType=WindowsRuntime]
 $propsType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties, Windows.Media.Control, ContentType=WindowsRuntime]
 $streamType = [Windows.Storage.Streams.IRandomAccessStreamWithContentType, Windows.Storage.Streams, ContentType=WindowsRuntime]
+$inputStreamType = [Windows.Storage.Streams.IInputStream, Windows.Storage.Streams, ContentType=WindowsRuntime]
+# PowerShell kann WinRT-Objekte nicht direkt an AsStreamForRead uebergeben ("Cannot find an overload"),
+# daher wie bei AsTask ueber Reflection aufrufen.
+$asStreamForRead = [System.IO.WindowsRuntimeStreamExtensions].GetMethod('AsStreamForRead', [Type[]]@($inputStreamType))
 
 # Laedt das Cover (IRandomAccessStreamReference), skaliert es auf 128x128 und gibt es
 # als PNG (Base64) zurueck. Bei Fehlern ''.
@@ -34,7 +38,7 @@ function Get-Cover($thumbnail) {
     try {
         if ($null -eq $thumbnail) { return '' }
         $winStream = Await ($thumbnail.OpenReadAsync()) $streamType
-        $stream = [System.IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($winStream)
+        $stream = $asStreamForRead.Invoke($null, @($winStream))
         # Erst komplett in den Speicher kopieren: Image.FromStream braucht einen durchsuchbaren Stream.
         $buffer = New-Object System.IO.MemoryStream
         $stream.CopyTo($buffer)

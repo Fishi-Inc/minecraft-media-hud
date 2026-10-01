@@ -4,6 +4,8 @@
   "mediahud.configuration.section.mediahud.client.toml.title": "Media HUD",
   "mediahud.configuration.corner": "Corner",
   "mediahud.configuration.corner.tooltip": "AUTO: top right if Xaero's Minimap is installed, otherwise top left",
+  "mediahud.configuration.size": "Size",
+  "mediahud.configuration.size.tooltip": "1 = small, 2 = medium, 3 = large (in addition to the GUI scale)",
   "mediahud.configuration.offsetX": "Horizontal offset",
   "mediahud.configuration.offsetX.tooltip": "Distance to the screen edge (GUI pixels)",
   "mediahud.configuration.offsetY": "Vertical offset",

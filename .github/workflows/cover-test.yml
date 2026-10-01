@@ -26,14 +26,7 @@ jobs:
           $file = Await ($fileType::GetFileFromPathAsync($path)) $fileType
           $ref = $refType::CreateFromFile($file)
 
-          # Alter Weg (ohne Kopie in den Speicher)
-          try {
-            $ws = Await ($ref.OpenReadAsync()) $streamType
-            $s = [System.IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($ws)
-            Write-Host "old: CanSeek=$($s.CanSeek)"
-            $img = [System.Drawing.Image]::FromStream($s)
-            Write-Host "old: OK $($img.Width)x$($img.Height)"
-          } catch { Write-Host "old: FAILED $($_.Exception.InnerException.Message) $($_.Exception.Message)" }
+          Write-Host "AsStreamForRead method found: $($null -ne $asStreamForRead)"
 
           # Neuer Weg
           $b64 = Get-Cover $ref
