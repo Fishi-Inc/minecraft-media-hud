@@ -14,7 +14,7 @@ Künstler - Titel
 
 ## Installation
 
-1. Die `.jar` aus `build/libs/` (oder aus dem Artefakt „media-hud“ der GitHub Action) in den `mods`-Ordner legen.
+1. Die `.jar` aus dem neuesten [Release](../../releases/latest) in den `mods`-Ordner legen.
 2. Minecraft mit dem NeoForge-Profil starten.
 
 ## Funktionsweise
@@ -37,3 +37,8 @@ direkt aufrufen. Deshalb startet die Mod einen einzigen unsichtbaren PowerShell-
 ```
 ./gradlew build
 ```
+
+## Versionierung
+
+Jeder in `main` gemergte Pull Request erzeugt automatisch ein Release und erhöht die
+Patch-Version (`0.0.1` → `0.0.2` → …). Major/Minor werden manuell in `gradle.properties` gesetzt.

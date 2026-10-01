@@ -6,7 +6,6 @@ license = "MIT"
 modId = "mediahud"
 version = "${version}"
 displayName = "Media HUD"
-authors = "Fishi Inc"
 description = '''
 Zeigt oben links den aktuell abgespielten Song (Windows-Medienwiedergabe, z. B. Spotify).
 '''
