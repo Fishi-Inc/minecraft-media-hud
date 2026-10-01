@@ -1,0 +1,19 @@
+{
+	"schemaVersion": 1,
+	"id": "mediahud",
+	"version": "${version}",
+	"name": "Media HUD",
+	"description": "Zeigt oben links den aktuell abgespielten Song (Windows-Medienwiedergabe, z. B. Spotify).",
+	"authors": ["Fishi Inc"],
+	"license": "MIT",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["com.fishi.mediahud.MediaHudClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

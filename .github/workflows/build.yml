@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Build
+        run: ./gradlew build --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: media-hud
+          path: build/libs/*.jar
+
+  # Prueft, dass das PowerShell-Skript auf echtem Windows laeuft und Zeilen ausgibt.
+  powershell-script:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skript 5 Sekunden laufen lassen
+        shell: powershell
+        run: |
+          $p = Start-Process powershell.exe -ArgumentList '-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File','src/main/resources/assets/mediahud/media.ps1' -RedirectStandardOutput out.txt -RedirectStandardError err.txt -PassThru -NoNewWindow
+          Start-Sleep -Seconds 5
+          $exited = $p.HasExited
+          if (-not $exited) { Stop-Process -Id $p.Id -Force }
+          Write-Host "--- stdout ---"; Get-Content out.txt
+          Write-Host "--- stderr ---"; Get-Content err.txt
+          if ($exited) { throw 'Skript hat sich unerwartet beendet' }
+          if ((Get-Content out.txt).Count -lt 2) { throw 'Skript hat keine Zeilen ausgegeben' }
