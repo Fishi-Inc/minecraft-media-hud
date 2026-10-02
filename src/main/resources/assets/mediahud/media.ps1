@@ -20,7 +20,7 @@ function Await($op, [Type]$type) {
     return $task.Result
 }
 
-function Clean($s) {
+function CleanText($s) {
     if ($null -eq $s) { return '' }
     return ([string]$s -replace '[\t\r\n]', ' ').Trim()
 }
@@ -36,12 +36,12 @@ $asStreamForRead = [System.IO.WindowsRuntimeStreamExtensions].GetMethod('AsStrea
 # Whitelist from Minecraft. -contains compares case-insensitively.
 $allowed = @()
 if ($env:MEDIAHUD_SOURCES) {
-    $allowed = @($env:MEDIAHUD_SOURCES -split "`t" | ForEach-Object { Clean $_ } | Where-Object { $_ -ne '' })
+    $allowed = @($env:MEDIAHUD_SOURCES -split "`t" | ForEach-Object { CleanText $_ } | Where-Object { $_ -ne '' })
 }
 
 function Is-Allowed($session) {
     if ($allowed.Count -eq 0) { return $true }
-    return ($allowed -contains (Clean $session.SourceAppUserModelId))
+    return ($allowed -contains (CleanText $session.SourceAppUserModelId))
 }
 
 # Loads the cover (IRandomAccessStreamReference), crops the largest centered square,
@@ -102,7 +102,7 @@ while ($true) {
     $sessions = @()
     try {
         $sessions = @($manager.GetSessions())
-        $ids = @($sessions | ForEach-Object { Clean $_.SourceAppUserModelId } | Where-Object { $_ -ne '' } | Select-Object -Unique)
+        $ids = @($sessions | ForEach-Object { CleanText $_.SourceAppUserModelId } | Where-Object { $_ -ne '' } | Select-Object -Unique)
         Send ("L`t" + ($ids -join "`t"))
     } catch {
         $sessions = @()
@@ -132,8 +132,8 @@ while ($true) {
             $status = [string]$session.GetPlaybackInfo().PlaybackStatus
             if ($status -eq 'Playing' -or $status -eq 'Paused') {
                 $props = Await ($session.TryGetMediaPropertiesAsync()) $propsType
-                $artist = Clean $props.Artist
-                $title = Clean $props.Title
+                $artist = CleanText $props.Artist
+                $title = CleanText $props.Title
 
                 $timeline = $session.GetTimelineProperties()
                 $duration = [long]($timeline.EndTime - $timeline.StartTime).TotalMilliseconds
@@ -147,7 +147,7 @@ while ($true) {
                 if ($position -lt 0) { $position = 0 }
                 if ($position -gt $duration) { $position = $duration }
 
-                $key = (Clean $session.SourceAppUserModelId) + '|' + $artist + '|' + $title
+                $key = (CleanText $session.SourceAppUserModelId) + '|' + $artist + '|' + $title
                 if ($key -ne $lastKey) {
                     $lastKey = $key
                     $coverId++
