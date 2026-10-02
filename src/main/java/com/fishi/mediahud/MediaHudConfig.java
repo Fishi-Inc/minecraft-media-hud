@@ -50,7 +50,7 @@ public final class MediaHudConfig {
 			.define("showAccent", true);
 		ACCENT_COLOR = builder
 			.comment("Color of the stripe as a hex value (RRGGBB, e.g. \"1DB954\" or \"#1DB954\")")
-			.define("accentColor", DEFAULT_ACCENT_COLOR, value -> value instanceof String s && parseColor(s) != -1);
+			.define("accentColor", DEFAULT_ACCENT_COLOR, value -> value instanceof String s && parseColor(s) != 0);
 		SOURCES = builder
 			.comment("Whitelisted media sources (Windows app ids, e.g. \"Spotify.exe\"). Only these are shown. Empty = all sources")
 			.defineListAllowEmpty("sources", List.of(), () -> "", value -> value instanceof String);
@@ -146,26 +146,26 @@ public final class MediaHudConfig {
 
 	/** Opaque ARGB color of the stripe. Never throws. */
 	static int accentColor() {
-		int color = -1;
+		int color = 0;
 		try {
 			color = parseColor(ACCENT_COLOR.get());
 		} catch (RuntimeException e) {
 			// Config not loaded (yet): use the default.
 		}
-		return color != -1 ? color : parseColor(DEFAULT_ACCENT_COLOR);
+		return color != 0 ? color : parseColor(DEFAULT_ACCENT_COLOR);
 	}
 
-	/** Parses "RRGGBB" or "#RRGGBB" into an opaque ARGB color, or returns -1 if invalid. */
+	/** Parses "RRGGBB" or "#RRGGBB" into an opaque ARGB color, or returns 0 if invalid (valid colors are never 0, alpha is always FF). */
 	private static int parseColor(String value) {
 		if (value == null) {
-			return -1;
+			return 0;
 		}
 		String hex = value.trim();
 		if (hex.startsWith("#")) {
 			hex = hex.substring(1);
 		}
 		if (hex.length() != 6) {
-			return -1;
+			return 0;
 		}
 		for (int i = 0; i < hex.length(); i++) {
 			if (Character.digit(hex.charAt(i), 16) < 0) {
