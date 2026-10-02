@@ -179,7 +179,7 @@ final class HudRenderer {
 
 	/**
 	 * Draws a text at card position (x, y). If it does not fit into {@code width},
-	 * it scrolls through a clipped area.
+	 * it scrolls through a clipped area, or is cut off with "..." if reduced motion is on.
 	 */
 	private static void drawLabel(GuiGraphics graphics, Font font, String text, int originX, int originY, float scale,
 			int x, int y, int width, int color, long now) {
@@ -187,6 +187,10 @@ final class HudRenderer {
 			return;
 		}
 		int textWidth = font.width(text);
+		if (textWidth > width && MediaHudConfig.reducedMotion()) {
+			text = font.plainSubstrByWidth(text, Math.max(0, width - font.width("..."))) + "...";
+			textWidth = font.width(text);
+		}
 		if (textWidth <= width) {
 			PoseStack pose = graphics.pose();
 			pose.pushPose();

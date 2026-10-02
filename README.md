@@ -4,7 +4,7 @@ NeoForge mod for **Minecraft 1.21.1**. It shows the song that is currently playi
 Windows in the top corner of the screen, e.g. in Spotify, a browser or any other player.
 
 It shows the cover, title, artist, time, progress bar and play/pause state.
-Titles that are too long scroll as a marquee. Covers that are not square are cropped to
+Titles that are too long scroll as a marquee (or are cut off with reduced motion). Covers that are not square are cropped to
 their centered square.
 
 ## Requirements
@@ -49,6 +49,7 @@ In game under **Mods → Media HUD → Config**:
   - **Size:** 1 = small, 2 = medium (default), 3 = large, in addition to Minecraft's GUI scale
   - **Pause timeout:** seconds until the display hides while paused, 0 = never, max. 300 (default 30)
   - **Horizontal / vertical offset:** e.g. increase the vertical offset to move the display below a minimap
+  - **Reduced motion:** long titles do not scroll and are cut off with "..." instead
   - **Show accent stripe:** turns the colored stripe on the left edge on or off
   - **Accent color:** color of the stripe as a hex value, e.g. `1DB954` (default) or `#3498DB`
   - **Use whitelist:** same switch as on the Media HUD config page

@@ -12,6 +12,8 @@
   "mediahud.configuration.offsetX.tooltip": "Distance to the screen edge (GUI pixels)",
   "mediahud.configuration.offsetY": "Vertical offset",
   "mediahud.configuration.offsetY.tooltip": "Distance to the screen edge (GUI pixels). Increase to move below a minimap.",
+  "mediahud.configuration.reducedMotion": "Reduced motion",
+  "mediahud.configuration.reducedMotion.tooltip": "Long titles do not scroll and are cut off with \"...\" instead.",
   "mediahud.configuration.showAccent": "Show accent stripe",
   "mediahud.configuration.showAccent.tooltip": "Colored stripe on the left edge of the display",
   "mediahud.configuration.accentColor": "Accent color",

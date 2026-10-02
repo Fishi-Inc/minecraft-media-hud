@@ -24,6 +24,7 @@ public final class MediaHudConfig {
 	public static final ModConfigSpec.IntValue PAUSE_TIMEOUT;
 	public static final ModConfigSpec.IntValue OFFSET_X;
 	public static final ModConfigSpec.IntValue OFFSET_Y;
+	public static final ModConfigSpec.BooleanValue REDUCED_MOTION;
 	public static final ModConfigSpec.BooleanValue SHOW_ACCENT;
 	public static final ModConfigSpec.ConfigValue<String> ACCENT_COLOR;
 	public static final ModConfigSpec.BooleanValue USE_WHITELIST;
@@ -46,6 +47,9 @@ public final class MediaHudConfig {
 		OFFSET_Y = builder
 			.comment("Vertical distance to the screen edge (GUI pixels), e.g. increase it to move below a minimap")
 			.defineInRange("offsetY", 4, 0, 2000);
+		REDUCED_MOTION = builder
+			.comment("Do not scroll long titles; cut them off with \"...\" instead")
+			.define("reducedMotion", false);
 		SHOW_ACCENT = builder
 			.comment("Show the colored stripe on the left edge of the display")
 			.define("showAccent", true);
@@ -137,6 +141,14 @@ public final class MediaHudConfig {
 			return OFFSET_Y.get();
 		} catch (RuntimeException e) {
 			return 4;
+		}
+	}
+
+	static boolean reducedMotion() {
+		try {
+			return REDUCED_MOTION.get();
+		} catch (RuntimeException e) {
+			return false;
 		}
 	}
 
