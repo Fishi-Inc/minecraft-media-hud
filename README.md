@@ -4,7 +4,7 @@ NeoForge mod for **Minecraft 1.21.1**. It shows the song that is currently playi
 Windows in the top corner of the screen, e.g. in Spotify, a browser or any other player.
 
 It shows the cover, title, artist, time, progress bar and play/pause state.
-Titles that are too long scroll as a marquee. Covers that are not square are cropped to
+Titles that are too long scroll as a marquee (or are cut off with reduced motion). Covers that are not square are cropped to
 their centered square.
 
 ## Requirements
@@ -36,10 +36,12 @@ It prints the current track including cover and position once per second.
 
 In game under **Mods → Media HUD → Config**:
 
-- **Media sources:** lists every program that currently reports media to Windows. Press
-  **Whitelist** next to a program to show only whitelisted programs. With nothing
-  whitelisted, every program is shown. Browsers count as one program each (individual tabs
-  cannot be told apart).
+- **Use whitelist:** off by default, so every program is shown. Turn it on to show only
+  whitelisted programs.
+- **Media sources:** lists every program that currently reports media to Windows. While the
+  whitelist is on, press **Whitelist** next to a program to add it. With nothing
+  whitelisted, every program is still shown. Browsers count as one program each (individual
+  tabs cannot be told apart).
 - **General Settings...** opens the remaining options (also in `config/mediahud-client.toml`):
   - **Corner:** `AUTO` (default), top left or top right. With `AUTO` the display moves to the
     right if Xaero's Minimap is installed (its default position is top left).
@@ -47,6 +49,10 @@ In game under **Mods → Media HUD → Config**:
   - **Size:** 1 = small, 2 = medium (default), 3 = large, in addition to Minecraft's GUI scale
   - **Pause timeout:** seconds until the display hides while paused, 0 = never, max. 300 (default 30)
   - **Horizontal / vertical offset:** e.g. increase the vertical offset to move the display below a minimap
+  - **Reduced motion:** long titles do not scroll and are cut off with "..." instead
+  - **Show accent stripe:** turns the colored stripe on the left edge on or off
+  - **Accent color:** color of the stripe as a hex value, e.g. `1DB954` (default) or `#3498DB`
+  - **Use whitelist:** same switch as on the Media HUD config page
   - **Whitelisted sources:** the whitelist as a plain list of Windows app ids
 
 ## Building

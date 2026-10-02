@@ -38,7 +38,6 @@ final class HudRenderer {
 	private static final int BAR_HEIGHT = 2;
 
 	private static final int COLOR_BACKGROUND = 0xCC151515;
-	private static final int COLOR_ACCENT = 0xFF1DB954;
 	private static final int COLOR_COVER_PLACEHOLDER = 0xFF333333;
 	private static final int COLOR_TITLE = 0xFFFFFFFF;
 	private static final int COLOR_ARTIST = 0xFFAAAAAA;
@@ -103,7 +102,9 @@ final class HudRenderer {
 			pose.scale(scale, scale, 1);
 
 			graphics.fill(0, 0, WIDTH, HEIGHT, fade(COLOR_BACKGROUND, alpha));
-			graphics.fill(0, 0, ACCENT_WIDTH, HEIGHT, fade(COLOR_ACCENT, alpha));
+			if (MediaHudConfig.showAccent()) {
+				graphics.fill(0, 0, ACCENT_WIDTH, HEIGHT, fade(MediaHudConfig.accentColor(), alpha));
+			}
 
 			if (prepareCover(minecraft.getTextureManager(), track.coverId())) {
 				drawCover(graphics, coverX, coverY, alpha);
@@ -178,7 +179,7 @@ final class HudRenderer {
 
 	/**
 	 * Draws a text at card position (x, y). If it does not fit into {@code width},
-	 * it scrolls through a clipped area.
+	 * it scrolls through a clipped area, or is cut off with "..." if reduced motion is on.
 	 */
 	private static void drawLabel(GuiGraphics graphics, Font font, String text, int originX, int originY, float scale,
 			int x, int y, int width, int color, long now) {
@@ -186,6 +187,10 @@ final class HudRenderer {
 			return;
 		}
 		int textWidth = font.width(text);
+		if (textWidth > width && MediaHudConfig.reducedMotion()) {
+			text = font.plainSubstrByWidth(text, Math.max(0, width - font.width("..."))) + "...";
+			textWidth = font.width(text);
+		}
 		if (textWidth <= width) {
 			PoseStack pose = graphics.pose();
 			pose.pushPose();

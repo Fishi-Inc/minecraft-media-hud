@@ -170,7 +170,7 @@ public final class MediaWatcher {
 			"-ExecutionPolicy", "Bypass",
 			"-EncodedCommand", encoded);
 		builder.redirectError(ProcessBuilder.Redirect.DISCARD);
-		List<String> whitelist = MediaHudConfig.sources();
+		List<String> whitelist = MediaHudConfig.activeWhitelist();
 		builder.environment().remove(SOURCES_ENV);
 		if (!whitelist.isEmpty()) {
 			builder.environment().put(SOURCES_ENV, String.join("\t", whitelist));
@@ -186,7 +186,7 @@ public final class MediaWatcher {
 			while (running && (line = reader.readLine()) != null) {
 				handleLine(line, System.currentTimeMillis());
 				// The script receives the whitelist only at start, so restart it after a change.
-				if (!MediaHudConfig.sources().equals(whitelist)) {
+				if (!MediaHudConfig.activeWhitelist().equals(whitelist)) {
 					return true;
 				}
 			}

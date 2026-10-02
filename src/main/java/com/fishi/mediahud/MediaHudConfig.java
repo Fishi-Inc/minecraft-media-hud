@@ -16,12 +16,18 @@ public final class MediaHudConfig {
 		TOP_RIGHT
 	}
 
+	private static final String DEFAULT_ACCENT_COLOR = "1DB954";
+
 	public static final ModConfigSpec SPEC;
 	public static final ModConfigSpec.EnumValue<Corner> CORNER;
 	public static final ModConfigSpec.IntValue SIZE;
 	public static final ModConfigSpec.IntValue PAUSE_TIMEOUT;
 	public static final ModConfigSpec.IntValue OFFSET_X;
 	public static final ModConfigSpec.IntValue OFFSET_Y;
+	public static final ModConfigSpec.BooleanValue REDUCED_MOTION;
+	public static final ModConfigSpec.BooleanValue SHOW_ACCENT;
+	public static final ModConfigSpec.ConfigValue<String> ACCENT_COLOR;
+	public static final ModConfigSpec.BooleanValue USE_WHITELIST;
 	public static final ModConfigSpec.ConfigValue<List<? extends String>> SOURCES;
 
 	static {
@@ -41,8 +47,20 @@ public final class MediaHudConfig {
 		OFFSET_Y = builder
 			.comment("Vertical distance to the screen edge (GUI pixels), e.g. increase it to move below a minimap")
 			.defineInRange("offsetY", 4, 0, 2000);
+		REDUCED_MOTION = builder
+			.comment("Do not scroll long titles; cut them off with \"...\" instead")
+			.define("reducedMotion", false);
+		SHOW_ACCENT = builder
+			.comment("Show the colored stripe on the left edge of the display")
+			.define("showAccent", true);
+		ACCENT_COLOR = builder
+			.comment("Color of the stripe as a hex value (RRGGBB, e.g. \"1DB954\" or \"#1DB954\")")
+			.define("accentColor", DEFAULT_ACCENT_COLOR, value -> value instanceof String s && parseColor(s) != 0);
+		USE_WHITELIST = builder
+			.comment("Show only whitelisted media sources. false = all sources are shown")
+			.define("useWhitelist", false);
 		SOURCES = builder
-			.comment("Whitelisted media sources (Windows app ids, e.g. \"Spotify.exe\"). Only these are shown. Empty = all sources")
+			.comment("Whitelisted media sources (Windows app ids, e.g. \"Spotify.exe\"). Only used if useWhitelist is true. Empty = all sources")
 			.defineListAllowEmpty("sources", List.of(), () -> "", value -> value instanceof String);
 		SPEC = builder.build();
 	}
@@ -126,6 +144,53 @@ public final class MediaHudConfig {
 		}
 	}
 
+	static boolean reducedMotion() {
+		try {
+			return REDUCED_MOTION.get();
+		} catch (RuntimeException e) {
+			return false;
+		}
+	}
+
+	static boolean showAccent() {
+		try {
+			return SHOW_ACCENT.get();
+		} catch (RuntimeException e) {
+			return true;
+		}
+	}
+
+	/** Opaque ARGB color of the stripe. Never throws. */
+	static int accentColor() {
+		int color = 0;
+		try {
+			color = parseColor(ACCENT_COLOR.get());
+		} catch (RuntimeException e) {
+			// Config not loaded (yet): use the default.
+		}
+		return color != 0 ? color : parseColor(DEFAULT_ACCENT_COLOR);
+	}
+
+	/** Parses "RRGGBB" or "#RRGGBB" into an opaque ARGB color, or returns 0 if invalid (valid colors are never 0, alpha is always FF). */
+	private static int parseColor(String value) {
+		if (value == null) {
+			return 0;
+		}
+		String hex = value.trim();
+		if (hex.startsWith("#")) {
+			hex = hex.substring(1);
+		}
+		if (hex.length() != 6) {
+			return 0;
+		}
+		for (int i = 0; i < hex.length(); i++) {
+			if (Character.digit(hex.charAt(i), 16) < 0) {
+				return 0;
+			}
+		}
+		return 0xFF000000 | Integer.parseInt(hex, 16);
+	}
+
 	/**
 	 * Whitelisted source ids, cleaned up (no empty entries, no tabs or line breaks, no duplicates).
 	 * Empty = all sources. Never throws.
@@ -147,6 +212,29 @@ public final class MediaHudConfig {
 			return List.of();
 		}
 		return List.copyOf(result);
+	}
+
+	static boolean useWhitelist() {
+		try {
+			return USE_WHITELIST.get();
+		} catch (RuntimeException e) {
+			return false;
+		}
+	}
+
+	/** Turns the whitelist on or off and saves the config. */
+	static void setUseWhitelist(boolean value) {
+		try {
+			USE_WHITELIST.set(value);
+			USE_WHITELIST.save();
+		} catch (RuntimeException e) {
+			// Config not loaded: nothing changes, the game keeps running.
+		}
+	}
+
+	/** The whitelist that actually applies: empty (= all sources) while the whitelist is turned off. Never throws. */
+	static List<String> activeWhitelist() {
+		return useWhitelist() ? sources() : List.of();
 	}
 
 	static boolean isWhitelisted(String id) {
