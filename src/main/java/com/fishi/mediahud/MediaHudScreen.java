@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Settings page of the mod (Mods -> Media HUD -> Config): a button to the general settings
- * and a list of media sources that can be whitelisted.
+ * Settings page of the mod (Mods -> Media HUD -> Config): a button to the general settings,
+ * a switch for the whitelist and a list of media sources that can be whitelisted.
  * The list contains all programs currently reporting media plus all whitelisted ones.
  */
 final class MediaHudScreen extends Screen {
 	private static final int ROW_HEIGHT = 24;
-	private static final int LIST_TOP = 92;
+	private static final int LIST_TOP = 116;
 	private static final int BUTTON_WIDTH = 100;
 	private static final int ROW_WIDTH = 310;
 
@@ -44,17 +44,26 @@ final class MediaHudScreen extends Screen {
 			.bounds(center - 100, 32, 200, 20)
 			.build());
 
+		addRenderableWidget(Button.builder(useWhitelistLabel(), button -> {
+				MediaHudConfig.setUseWhitelist(!MediaHudConfig.useWhitelist());
+				// The whitelist buttons are only usable while the whitelist is on.
+				rebuildWidgets();
+			})
+			.bounds(center - 100, 56, 200, 20)
+			.build());
+
 		int maxRows = Math.max(0, (height - 48 - LIST_TOP) / ROW_HEIGHT);
 		int rows = Math.min(shown.size(), maxRows);
 		hiddenCount = shown.size() - rows;
 		for (int i = 0; i < rows; i++) {
 			String id = shown.get(i);
-			addRenderableWidget(Button.builder(toggleLabel(id), button -> {
+			Button toggle = addRenderableWidget(Button.builder(toggleLabel(id), button -> {
 					MediaHudConfig.toggleSource(id);
 					button.setMessage(toggleLabel(id));
 				})
 				.bounds(center + ROW_WIDTH / 2 - BUTTON_WIDTH, LIST_TOP + i * ROW_HEIGHT, BUTTON_WIDTH, 20)
 				.build());
+			toggle.active = MediaHudConfig.useWhitelist();
 		}
 
 		addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
@@ -77,11 +86,16 @@ final class MediaHudScreen extends Screen {
 		int center = width / 2;
 		int left = center - ROW_WIDTH / 2;
 		graphics.drawCenteredString(font, title, center, 15, 0xFFFFFFFF);
-		graphics.drawCenteredString(font, Component.translatable("mediahud.screen.sources"), center, 62, 0xFFFFFFFF);
-		Component hint = MediaHudConfig.sources().isEmpty()
-			? Component.translatable("mediahud.screen.hint.all")
-			: Component.translatable("mediahud.screen.hint.whitelist");
-		graphics.drawCenteredString(font, hint, center, 74, 0xFFAAAAAA);
+		graphics.drawCenteredString(font, Component.translatable("mediahud.screen.sources"), center, 86, 0xFFFFFFFF);
+		String hintKey;
+		if (!MediaHudConfig.useWhitelist()) {
+			hintKey = "mediahud.screen.hint.off";
+		} else if (MediaHudConfig.sources().isEmpty()) {
+			hintKey = "mediahud.screen.hint.all";
+		} else {
+			hintKey = "mediahud.screen.hint.whitelist";
+		}
+		graphics.drawCenteredString(font, Component.translatable(hintKey), center, 98, 0xFFAAAAAA);
 
 		if (shown.isEmpty()) {
 			graphics.drawCenteredString(font, Component.translatable("mediahud.screen.empty"), center, LIST_TOP + 6, 0xFFAAAAAA);
@@ -103,6 +117,11 @@ final class MediaHudScreen extends Screen {
 	@Override
 	public void onClose() {
 		minecraft.setScreen(parent);
+	}
+
+	private static Component useWhitelistLabel() {
+		return Component.translatable("mediahud.screen.useWhitelist",
+			MediaHudConfig.useWhitelist() ? CommonComponents.OPTION_ON : CommonComponents.OPTION_OFF);
 	}
 
 	private static Component toggleLabel(String id) {

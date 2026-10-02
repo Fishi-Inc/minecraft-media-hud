@@ -26,6 +26,7 @@ public final class MediaHudConfig {
 	public static final ModConfigSpec.IntValue OFFSET_Y;
 	public static final ModConfigSpec.BooleanValue SHOW_ACCENT;
 	public static final ModConfigSpec.ConfigValue<String> ACCENT_COLOR;
+	public static final ModConfigSpec.BooleanValue USE_WHITELIST;
 	public static final ModConfigSpec.ConfigValue<List<? extends String>> SOURCES;
 
 	static {
@@ -51,8 +52,11 @@ public final class MediaHudConfig {
 		ACCENT_COLOR = builder
 			.comment("Color of the stripe as a hex value (RRGGBB, e.g. \"1DB954\" or \"#1DB954\")")
 			.define("accentColor", DEFAULT_ACCENT_COLOR, value -> value instanceof String s && parseColor(s) != 0);
+		USE_WHITELIST = builder
+			.comment("Show only whitelisted media sources. false = all sources are shown")
+			.define("useWhitelist", false);
 		SOURCES = builder
-			.comment("Whitelisted media sources (Windows app ids, e.g. \"Spotify.exe\"). Only these are shown. Empty = all sources")
+			.comment("Whitelisted media sources (Windows app ids, e.g. \"Spotify.exe\"). Only used if useWhitelist is true. Empty = all sources")
 			.defineListAllowEmpty("sources", List.of(), () -> "", value -> value instanceof String);
 		SPEC = builder.build();
 	}
@@ -196,6 +200,29 @@ public final class MediaHudConfig {
 			return List.of();
 		}
 		return List.copyOf(result);
+	}
+
+	static boolean useWhitelist() {
+		try {
+			return USE_WHITELIST.get();
+		} catch (RuntimeException e) {
+			return false;
+		}
+	}
+
+	/** Turns the whitelist on or off and saves the config. */
+	static void setUseWhitelist(boolean value) {
+		try {
+			USE_WHITELIST.set(value);
+			USE_WHITELIST.save();
+		} catch (RuntimeException e) {
+			// Config not loaded: nothing changes, the game keeps running.
+		}
+	}
+
+	/** The whitelist that actually applies: empty (= all sources) while the whitelist is turned off. Never throws. */
+	static List<String> activeWhitelist() {
+		return useWhitelist() ? sources() : List.of();
 	}
 
 	static boolean isWhitelisted(String id) {
