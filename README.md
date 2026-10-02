@@ -47,6 +47,8 @@ In game under **Mods → Media HUD → Config**:
   - **Size:** 1 = small, 2 = medium (default), 3 = large, in addition to Minecraft's GUI scale
   - **Pause timeout:** seconds until the display hides while paused, 0 = never, max. 300 (default 30)
   - **Horizontal / vertical offset:** e.g. increase the vertical offset to move the display below a minimap
+  - **Show accent stripe:** turns the colored stripe on the left edge on or off
+  - **Accent color:** color of the stripe as a hex value, e.g. `1DB954` (default) or `#3498DB`
   - **Whitelisted sources:** the whitelist as a plain list of Windows app ids
 
 ## Building

@@ -22,6 +22,8 @@ public final class MediaHudConfig {
 	public static final ModConfigSpec.IntValue PAUSE_TIMEOUT;
 	public static final ModConfigSpec.IntValue OFFSET_X;
 	public static final ModConfigSpec.IntValue OFFSET_Y;
+	public static final ModConfigSpec.BooleanValue SHOW_ACCENT;
+	public static final ModConfigSpec.ConfigValue<String> ACCENT_COLOR;
 	public static final ModConfigSpec.ConfigValue<List<? extends String>> SOURCES;
 
 	static {
@@ -41,11 +43,19 @@ public final class MediaHudConfig {
 		OFFSET_Y = builder
 			.comment("Vertical distance to the screen edge (GUI pixels), e.g. increase it to move below a minimap")
 			.defineInRange("offsetY", 4, 0, 2000);
+		SHOW_ACCENT = builder
+			.comment("Show the colored stripe on the left edge of the display")
+			.define("showAccent", true);
+		ACCENT_COLOR = builder
+			.comment("Color of the stripe as a hex value (RRGGBB, e.g. \"1DB954\" or \"#1DB954\")")
+			.define("accentColor", DEFAULT_ACCENT_COLOR, value -> value instanceof String s && parseColor(s) != -1);
 		SOURCES = builder
 			.comment("Whitelisted media sources (Windows app ids, e.g. \"Spotify.exe\"). Only these are shown. Empty = all sources")
 			.defineListAllowEmpty("sources", List.of(), () -> "", value -> value instanceof String);
 		SPEC = builder.build();
 	}
+
+	private static final String DEFAULT_ACCENT_COLOR = "1DB954";
 
 	private MediaHudConfig() {
 	}
@@ -124,6 +134,45 @@ public final class MediaHudConfig {
 		} catch (RuntimeException e) {
 			return 4;
 		}
+	}
+
+	static boolean showAccent() {
+		try {
+			return SHOW_ACCENT.get();
+		} catch (RuntimeException e) {
+			return true;
+		}
+	}
+
+	/** Opaque ARGB color of the stripe. Never throws. */
+	static int accentColor() {
+		int color = -1;
+		try {
+			color = parseColor(ACCENT_COLOR.get());
+		} catch (RuntimeException e) {
+			// Config not loaded (yet): use the default.
+		}
+		return color != -1 ? color : parseColor(DEFAULT_ACCENT_COLOR);
+	}
+
+	/** Parses "RRGGBB" or "#RRGGBB" into an opaque ARGB color, or returns -1 if invalid. */
+	private static int parseColor(String value) {
+		if (value == null) {
+			return -1;
+		}
+		String hex = value.trim();
+		if (hex.startsWith("#")) {
+			hex = hex.substring(1);
+		}
+		if (hex.length() != 6) {
+			return -1;
+		}
+		for (int i = 0; i < hex.length(); i++) {
+			if (Character.digit(hex.charAt(i), 16) < 0) {
+				return -1;
+			}
+		}
+		return 0xFF000000 | Integer.parseInt(hex, 16);
 	}
 
 	/**
