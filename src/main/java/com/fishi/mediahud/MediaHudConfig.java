@@ -169,7 +169,7 @@ public final class MediaHudConfig {
 		}
 		for (int i = 0; i < hex.length(); i++) {
 			if (Character.digit(hex.charAt(i), 16) < 0) {
-				return -1;
+				return 0;
 			}
 		}
 		return 0xFF000000 | Integer.parseInt(hex, 16);
