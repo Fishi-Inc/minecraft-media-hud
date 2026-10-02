@@ -1,0 +1,15 @@
+{
+  "mediahud.configuration.title": "Media HUD",
+  "mediahud.configuration.section.mediahud.client.toml": "Media HUD",
+  "mediahud.configuration.section.mediahud.client.toml.title": "Media HUD",
+  "mediahud.configuration.corner": "Corner",
+  "mediahud.configuration.corner.tooltip": "AUTO: top right if Xaero's Minimap is installed, otherwise top left",
+  "mediahud.configuration.size": "Size",
+  "mediahud.configuration.size.tooltip": "1 = small, 2 = medium, 3 = large (in addition to the GUI scale)",
+  "mediahud.configuration.pauseTimeout": "Pause timeout (seconds)",
+  "mediahud.configuration.pauseTimeout.tooltip": "Hide the display after the media has been paused for this many seconds. 0 = never, max. 300",
+  "mediahud.configuration.offsetX": "Horizontal offset",
+  "mediahud.configuration.offsetX.tooltip": "Distance to the screen edge (GUI pixels)",
+  "mediahud.configuration.offsetY": "Vertical offset",
+  "mediahud.configuration.offsetY.tooltip": "Distance to the screen edge (GUI pixels). Increase to move below a minimap."
+}

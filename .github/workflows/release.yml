@@ -1,0 +1,74 @@
+name: Release
+
+# Jeder gemergte Pull Request in main erzeugt ein Release.
+# Ist die Version aus gradle.properties schon released, wird der Patch-Teil um 1 erhöht.
+# Major/Minor werden nur manuell in gradle.properties geändert.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Determine version
+        id: version
+        run: |
+          current=$(grep -E '^mod_version=' gradle.properties | cut -d= -f2)
+          if ! [[ "$current" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid mod_version '$current' in gradle.properties"
+            exit 1
+          fi
+          version="$current"
+          if git rev-parse -q --verify "refs/tags/v$current" > /dev/null; then
+            IFS=. read -r major minor patch <<< "$current"
+            version="$major.$minor.$((patch + 1))"
+            sed -i "s/^mod_version=.*/mod_version=$version/" gradle.properties
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Tag and push
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git diff --quiet; then
+            git commit -am "Release v$VERSION"
+          fi
+          git tag "v$VERSION"
+          git push --atomic origin HEAD:main "refs/tags/v$VERSION"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release create "v$VERSION" build/libs/*.jar --title "v$VERSION" --generate-notes

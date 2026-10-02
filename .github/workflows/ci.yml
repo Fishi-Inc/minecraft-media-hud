@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Lint PowerShell script
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/src/main/resources/assets/mediahud/media.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors) { $errors | Out-String | Write-Host; exit 1 }
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: media-hud
+          path: build/libs/*.jar
+          if-no-files-found: error

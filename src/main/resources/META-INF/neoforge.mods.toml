@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "mediahud"
+version = "${version}"
+displayName = "Media HUD"
+authors = "Fishi_Inc"
+description = '''
+Displays the media that is currently playing (or paused) in the top corner of your screen.
+'''
+
+[[dependencies.mediahud]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1.0,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.mediahud]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.21.2)"
+ordering = "NONE"
+side = "CLIENT"
