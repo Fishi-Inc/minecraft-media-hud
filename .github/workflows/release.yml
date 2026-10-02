@@ -1,8 +1,8 @@
 name: Release
 
-# Jeder gemergte Pull Request in main erzeugt ein Release.
-# Ist die Version aus gradle.properties schon released, wird der Patch-Teil um 1 erhöht.
-# Major/Minor werden nur manuell in gradle.properties geändert.
+# Every pull request merged into main creates a release.
+# If the version from gradle.properties is already released, the patch part is increased by 1.
+# Major/minor are only changed manually in gradle.properties.
 on:
   pull_request:
     types: [closed]

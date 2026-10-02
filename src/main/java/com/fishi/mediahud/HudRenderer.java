@@ -16,14 +16,14 @@ import java.io.ByteArrayInputStream;
 import java.util.Locale;
 
 /**
- * Zeichnet die Medien-Karte:
+ * Draws the media card:
  * <pre>
- * ┃ [Cover]  Titel              1:06 / 4:23
- * ┃ [Cover]  Künstler                     ▶
+ * ┃ [Cover]  Title              1:06 / 4:23
+ * ┃ [Cover]  Artist                       ▶
  * ┃ [Cover]  ━━━━━━━━━━──────────────────────
  * </pre>
- * Alle Maße sind in Karten-Pixeln und werden mit der Größenstufe aus der Config skaliert
- * (zusätzlich zur GUI-Skalierung von Minecraft). Läuft ausschließlich auf dem Render-Thread.
+ * All sizes are in card pixels and are scaled with the size step from the config
+ * (in addition to Minecraft's GUI scale). Runs on the render thread only.
  */
 final class HudRenderer {
 	private static final Logger LOGGER = LoggerFactory.getLogger("mediahud");
@@ -32,7 +32,7 @@ final class HudRenderer {
 	private static final int HEIGHT = 44;
 	private static final int ACCENT_WIDTH = 2;
 	private static final int COVER_SIZE = 32;
-	/** Das Skript liefert Cover immer als 128x128-PNG (scharf bis GUI-Skalierung 4). */
+	/** The script always delivers covers as 128x128 PNG (sharp up to GUI scale 4). */
 	private static final int COVER_TEXTURE_SIZE = 128;
 	private static final int ICON_SIZE = 7;
 	private static final int BAR_HEIGHT = 2;
@@ -48,21 +48,21 @@ final class HudRenderer {
 	private static final int COLOR_BAR = 0xFFFFFFFF;
 
 	private static final long FADE_DURATION_MS = 1_000;
-	/** Darunter wird gar nicht mehr gezeichnet (Schrift mit fast 0 Alpha würde sonst deckend). */
+	/** Below this nothing is drawn at all (text with almost 0 alpha would otherwise be opaque). */
 	private static final float MIN_ALPHA = 0.05f;
 
-	/** Abstand zwischen Ende und erneutem Anfang der Laufschrift. */
+	/** Gap between the end and the next start of the scrolling text. */
 	private static final int MARQUEE_GAP = 30;
-	/** Geschwindigkeit der Laufschrift in GUI-Pixeln pro Sekunde. */
+	/** Speed of the scrolling text in GUI pixels per second. */
 	private static final int MARQUEE_SPEED = 30;
 
 	private static final ResourceLocation COVER_TEXTURE = ResourceLocation.fromNamespaceAndPath("mediahud", "cover");
-	/** Aktuell als Textur geladenes Cover. Verglichen wird das Objekt, nicht die Id (Ids beginnen nach einem Neustart des Skripts wieder bei 1). */
+	/** Cover currently loaded as texture. The object is compared, not the id (ids start at 1 again after the script restarts). */
 	private static MediaWatcher.Cover loadedCover = null;
-	/** Cover, das nicht geladen werden konnte (wird nicht erneut versucht). */
+	/** Cover that could not be loaded (not retried). */
 	private static MediaWatcher.Cover failedCover = null;
 
-	/** Titel, der zuletzt gespielt hat (bzw. neu erschienen ist), und wann. */
+	/** Track that was last playing (or newly appeared), and when. */
 	private static String activeKey = null;
 	private static long lastActiveMs = 0;
 
@@ -84,7 +84,7 @@ final class HudRenderer {
 			: offsetX;
 		int originY = MediaHudConfig.offsetY();
 
-		// Layout in Karten-Pixeln (Ursprung oben links auf der Karte)
+		// Layout in card pixels (origin at the top left of the card)
 		int coverX = ACCENT_WIDTH + 4;
 		int coverY = 6;
 		int textX = coverX + COVER_SIZE + 6;
@@ -130,7 +130,7 @@ final class HudRenderer {
 			pose.popPose();
 		}
 
-		// Texte zuletzt, da die Laufschrift einen eigenen Ausschnitt (Scissor) braucht.
+		// Text last, because the scrolling text needs its own scissor area.
 		drawLabel(graphics, font, track.title(), originX, originY, scale,
 			textX, line1Y, titleRight - textX, fade(COLOR_TITLE, alpha), now);
 		drawLabel(graphics, font, track.artist(), originX, originY, scale,
@@ -138,8 +138,8 @@ final class HudRenderer {
 	}
 
 	/**
-	 * 1 = voll sichtbar. Ist der Titel länger als das Pausen-Timeout aus der Config pausiert,
-	 * wird die Karte innerhalb von {@link #FADE_DURATION_MS} ausgeblendet.
+	 * 1 = fully visible. If the track has been paused for longer than the pause timeout from the config,
+	 * the card fades out within {@link #FADE_DURATION_MS}.
 	 */
 	private static float fadeAlpha(MediaWatcher.Track track, long now) {
 		String key = track.artist() + "\n" + track.title();
@@ -149,7 +149,7 @@ final class HudRenderer {
 		}
 		int timeoutSeconds = MediaHudConfig.pauseTimeoutSeconds();
 		if (timeoutSeconds <= 0) {
-			return 1f; // 0 = kein Timeout
+			return 1f; // 0 = no timeout
 		}
 		long fadingFor = now - lastActiveMs - timeoutSeconds * 1000L;
 		if (fadingFor <= 0) {
@@ -158,7 +158,7 @@ final class HudRenderer {
 		return Math.max(0f, 1f - fadingFor / (float) FADE_DURATION_MS);
 	}
 
-	/** Multipliziert den Alpha-Kanal einer ARGB-Farbe. */
+	/** Multiplies the alpha channel of an ARGB color. */
 	private static int fade(int argb, float alpha) {
 		int a = Math.round(((argb >>> 24) & 0xFF) * alpha);
 		return (a << 24) | (argb & 0x00FFFFFF);
@@ -177,8 +177,8 @@ final class HudRenderer {
 	}
 
 	/**
-	 * Zeichnet einen Text an Karten-Position (x, y). Passt er nicht in {@code width},
-	 * läuft er als Laufschrift durch einen Ausschnitt.
+	 * Draws a text at card position (x, y). If it does not fit into {@code width},
+	 * it scrolls through a clipped area.
 	 */
 	private static void drawLabel(GuiGraphics graphics, Font font, String text, int originX, int originY, float scale,
 			int x, int y, int width, int color, long now) {
@@ -201,8 +201,8 @@ final class HudRenderer {
 
 		int cycle = textWidth + MARQUEE_GAP;
 		int offset = (int) ((now * MARQUEE_SPEED / 1000) % cycle);
-		// Der Ausschnitt wird in Bildschirm-Koordinaten angegeben (+1 für den Schatten),
-		// daher hier selbst skalieren und erst danach die Skalierung für den Text setzen.
+		// The scissor area is given in screen coordinates (+1 for the shadow),
+		// so scale it here manually and only then set the scale for the text.
 		int left = originX + (int) Math.floor(x * scale);
 		int top = originY + (int) Math.floor(y * scale);
 		int right = originX + (int) Math.ceil((x + width) * scale);
@@ -224,7 +224,7 @@ final class HudRenderer {
 		}
 	}
 
-	/** Dreieck ▶, aus Rechtecken gezeichnet (keine Abhängigkeit von Schrift-Glyphen). */
+	/** Triangle ▶, drawn from rectangles (no dependency on font glyphs). */
 	private static void drawPlayIcon(GuiGraphics graphics, int x, int y, int color) {
 		for (int row = 0; row < ICON_SIZE; row++) {
 			int width = Math.min(row, ICON_SIZE - 1 - row) + 1;
@@ -232,13 +232,13 @@ final class HudRenderer {
 		}
 	}
 
-	/** Zwei Balken ❚❚. */
+	/** Two bars ❚❚. */
 	private static void drawPauseIcon(GuiGraphics graphics, int x, int y, int color) {
 		graphics.fill(x, y, x + 2, y + ICON_SIZE, color);
 		graphics.fill(x + 4, y, x + 6, y + ICON_SIZE, color);
 	}
 
-	/** Lädt bei Bedarf das Cover als Textur. Gibt {@code true} zurück, wenn es gezeichnet werden kann. */
+	/** Loads the cover as texture if needed. Returns {@code true} if it can be drawn. */
 	private static boolean prepareCover(TextureManager textureManager, int wantedId) {
 		if (wantedId <= 0) {
 			return false;
@@ -255,17 +255,17 @@ final class HudRenderer {
 		try {
 			image = NativeImage.read(new ByteArrayInputStream(cover.png()));
 			if (image.getWidth() != COVER_TEXTURE_SIZE || image.getHeight() != COVER_TEXTURE_SIZE) {
-				throw new IllegalStateException("Unerwartete Cover-Größe " + image.getWidth() + "x" + image.getHeight());
+				throw new IllegalStateException("Unexpected cover size " + image.getWidth() + "x" + image.getHeight());
 			}
 			DynamicTexture texture = new DynamicTexture(image);
-			image = null; // gehört jetzt der Textur
+			image = null; // now owned by the texture
 			loadedCover = null;
 			textureManager.release(COVER_TEXTURE);
 			textureManager.register(COVER_TEXTURE, texture);
 			loadedCover = cover;
 			return true;
 		} catch (Exception e) {
-			LOGGER.warn("Media HUD: Cover konnte nicht geladen werden.", e);
+			LOGGER.warn("Media HUD: could not load cover.", e);
 			failedCover = cover;
 			return false;
 		} finally {

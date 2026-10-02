@@ -8,7 +8,6 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
@@ -21,10 +20,10 @@ public final class MediaHudClient {
 
 	public MediaHudClient(IEventBus modEventBus, ModContainer container) {
 		container.registerConfig(ModConfig.Type.CLIENT, MediaHudConfig.SPEC);
-		container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+		container.registerExtensionPoint(IConfigScreenFactory.class, MediaHudScreen::new);
 		modEventBus.addListener(MediaHudClient::onClientSetup);
 		NeoForge.EVENT_BUS.addListener(MediaHudClient::onRenderGui);
-		// Reine Java-Absicherung: beim Beenden der JVM den Hintergrundprozess stoppen.
+		// Plain Java safeguard: stop the background process when the JVM exits.
 		Runtime.getRuntime().addShutdownHook(new Thread(MediaWatcher::stop, "MediaHUD-Shutdown"));
 	}
 
@@ -37,7 +36,7 @@ public final class MediaHudClient {
 		if (minecraft == null || minecraft.options == null || minecraft.font == null) {
 			return;
 		}
-		// F1 (HUD aus) oder F3 (Debug-Anzeige liegt ebenfalls oben links)
+		// F1 (HUD hidden) or F3 (the debug screen is also at the top left)
 		if (minecraft.options.hideGui || minecraft.getDebugOverlay().showDebugScreen()) {
 			return;
 		}
@@ -48,9 +47,9 @@ public final class MediaHudClient {
 		try {
 			HudRenderer.render(event.getGuiGraphics(), minecraft, track);
 		} catch (RuntimeException e) {
-			// Ein Fehler in der Anzeige darf nie das Spiel abstürzen lassen.
+			// An error in the display must never crash the game.
 			if (!loggedRenderFailure) {
-				LOGGER.warn("Media HUD: Anzeige fehlgeschlagen.", e);
+				LOGGER.warn("Media HUD: rendering failed.", e);
 				loggedRenderFailure = true;
 			}
 		}
