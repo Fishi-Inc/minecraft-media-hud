@@ -16,6 +16,8 @@ public final class MediaHudConfig {
 		TOP_RIGHT
 	}
 
+	private static final String DEFAULT_ACCENT_COLOR = "1DB954";
+
 	public static final ModConfigSpec SPEC;
 	public static final ModConfigSpec.EnumValue<Corner> CORNER;
 	public static final ModConfigSpec.IntValue SIZE;
@@ -54,8 +56,6 @@ public final class MediaHudConfig {
 			.defineListAllowEmpty("sources", List.of(), () -> "", value -> value instanceof String);
 		SPEC = builder.build();
 	}
-
-	private static final String DEFAULT_ACCENT_COLOR = "1DB954";
 
 	private MediaHudConfig() {
 	}
