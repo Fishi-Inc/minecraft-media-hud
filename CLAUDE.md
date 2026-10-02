@@ -9,3 +9,5 @@
   erhöht den Patch-Teil automatisch um 1 (Workflow `Release`). Major/Minor nur ändern, wenn
   der Nutzer es ausdrücklich sagt.
 - **Ziel:** NeoForge, Minecraft 1.21.1, Java 21.
+- **Sprache:** Alles in der Mod ist auf Englisch (Texte im Spiel, Config, Logs, Code-Kommentare,
+  README, Commits). Keine weiteren Sprachdateien außer `en_us.json`.

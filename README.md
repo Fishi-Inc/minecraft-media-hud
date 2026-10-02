@@ -1,55 +1,61 @@
 # Media HUD
 
-NeoForge-Mod für **Minecraft 1.21.1**. Sie zeigt oben links den Song an, der gerade
-unter Windows läuft, z. B. in Spotify, im Browser oder in einem anderen Player.
+NeoForge mod for **Minecraft 1.21.1**. It shows the song that is currently playing on
+Windows in the top corner of the screen, e.g. in Spotify, a browser or any other player.
 
-Angezeigt werden Cover, Titel, Künstler, Zeit, Fortschrittsbalken und Play/Pause-Status.
-Zu lange Titel laufen als Laufschrift durch.
+It shows the cover, title, artist, time, progress bar and play/pause state.
+Titles that are too long scroll as a marquee. Covers that are not square are cropped to
+their centered square.
 
-## Voraussetzungen
+## Requirements
 
-- Windows 10 oder 11. Auf anderen Systemen macht die Mod nichts.
-- [NeoForge](https://neoforged.net/) 21.1.x für Minecraft 1.21.1. Die Mod läuft nur auf dem Client.
+- Windows 10 or 11. On other systems the mod does nothing.
+- [NeoForge](https://neoforged.net/) 21.1.x for Minecraft 1.21.1. The mod runs on the client only.
 
 ## Installation
 
-1. Die `.jar` aus dem neuesten [Release](../../releases/latest) in den `mods`-Ordner legen.
-2. Minecraft mit dem NeoForge-Profil starten.
+1. Put the `.jar` from the latest [release](../../releases/latest) into the `mods` folder.
+2. Start Minecraft with the NeoForge profile.
 
-## Funktionsweise
+## How it works
 
-Windows stellt die laufende Wiedergabe über die Schnittstelle
-`GlobalSystemMediaTransportControlsSessionManager` bereit. Das ist dieselbe Quelle wie
-bei der Medienanzeige in der Lautstärke-Einblendung. Java kann diese WinRT-API nicht
-direkt aufrufen. Deshalb startet die Mod einen einzigen unsichtbaren PowerShell-Prozess
-(`src/main/resources/assets/mediahud/media.ps1`). Dieser gibt einmal pro Sekunde
-den aktuellen Titel samt Cover und Position aus.
+Windows provides the current playback through the API
+`GlobalSystemMediaTransportControlsSessionManager`. This is the same source as the media
+display in the volume flyout. Java cannot call this WinRT API directly, so the mod starts a
+single invisible PowerShell process (`src/main/resources/assets/mediahud/media.ps1`).
+It prints the current track including cover and position once per second.
 
-- Angezeigt wird nur etwas, wenn der Status **Playing** oder **Paused** ist.
-- Bei F1 (HUD ausgeblendet) und F3 (Debug-Anzeige) wird nichts angezeigt.
-- Ist die Wiedergabe länger als das Pausen-Timeout (Standard 30 Sekunden) pausiert, wird die Anzeige ausgeblendet.
-- Kommt 5 Sekunden lang keine Antwort, verschwindet die Anzeige.
-- Beendet sich PowerShell, wird es nach 10 Sekunden neu gestartet.
-- Endet Minecraft (auch bei einem Absturz), beendet sich das Skript selbst.
+- Something is only shown if the state is **Playing** or **Paused**.
+- Nothing is shown while F1 (HUD hidden) or F3 (debug screen) is active.
+- If playback has been paused for longer than the pause timeout (default 30 seconds), the display is hidden.
+- If there is no answer for 5 seconds, the display disappears.
+- If PowerShell exits, it is restarted after 10 seconds.
+- When Minecraft exits (even after a crash), the script exits on its own.
 
-## Einstellungen
+## Settings
 
-Im Spiel unter **Mods → Media HUD → Konfiguration** (oder `config/mediahud-client.toml`):
+In game under **Mods → Media HUD → Config**:
 
-- **Ecke:** `AUTO` (Standard), oben links oder oben rechts. Bei `AUTO` weicht die Anzeige nach
-  rechts aus, wenn Xaero's Minimap installiert ist (deren Standardplatz ist oben links).
-  JourneyMap sitzt standardmäßig oben rechts, dort bleibt die Anzeige links.
-- **Größe:** 1 = klein, 2 = mittel (Standard), 3 = groß, zusätzlich zur GUI-Skalierung von Minecraft
-- **Pausen-Timeout:** Sekunden bis zum Ausblenden bei Pause, 0 = nie, höchstens 300 (Standard 30)
-- **Abstand horizontal / vertikal:** z. B. den vertikalen Abstand erhöhen, damit die Anzeige unter einer Minimap liegt
+- **Media sources:** lists every program that currently reports media to Windows. Press
+  **Whitelist** next to a program to show only whitelisted programs. With nothing
+  whitelisted, every program is shown. Browsers count as one program each (individual tabs
+  cannot be told apart).
+- **General Settings...** opens the remaining options (also in `config/mediahud-client.toml`):
+  - **Corner:** `AUTO` (default), top left or top right. With `AUTO` the display moves to the
+    right if Xaero's Minimap is installed (its default position is top left).
+    JourneyMap sits top right by default, so the display stays on the left.
+  - **Size:** 1 = small, 2 = medium (default), 3 = large, in addition to Minecraft's GUI scale
+  - **Pause timeout:** seconds until the display hides while paused, 0 = never, max. 300 (default 30)
+  - **Horizontal / vertical offset:** e.g. increase the vertical offset to move the display below a minimap
+  - **Whitelisted sources:** the whitelist as a plain list of Windows app ids
 
-## Bauen
+## Building
 
 ```
 ./gradlew build
 ```
 
-## Versionierung
+## Versioning
 
-Jeder in `main` gemergte Pull Request erzeugt automatisch ein Release und erhöht die
-Patch-Version (`0.0.1` → `0.0.2` → …). Major/Minor werden manuell in `gradle.properties` gesetzt.
+Every pull request merged into `main` automatically creates a release and increases the
+patch version (`0.0.1` → `0.0.2` → …). Major/minor are set manually in `gradle.properties`.
